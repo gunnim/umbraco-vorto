@@ -149,7 +149,9 @@ namespace Our.Umbraco.Vorto.Web.Controllers
             }
             else if (languageSource == "custom" && Settings.customRetriever != null)
             {
+                if (Settings.DetailedLogging)
                 {
+                    Log.Info("About to use custom retriever");
                 }
 
                 languages = Settings.customRetriever.GetLanguages().ToList();
@@ -216,7 +218,29 @@ namespace Our.Umbraco.Vorto.Web.Controllers
                     IsRightToLeft = x.TextInfo.IsRightToLeft
                 }));
 
+            //return new List<Language>
+            //{
+            //    new Language
+            //    {
+            //        IsoCode = "EU",
+            //        Name = "Europe",
+            //        NativeName = "Europe",
+            //        IsDefault = true,
+            //    },
+            //    new Language
+            //    {
+            //        IsoCode = "is-IS",
+            //        Name = "Iceland",
+            //        NativeName = "Ísland"
+            //    }
+            //};
+
             return languages;
         }
+
+        private static readonly ILog Log =
+            LogManager.GetLogger(
+                MethodBase.GetCurrentMethod().DeclaringType
+            );
     }
 }

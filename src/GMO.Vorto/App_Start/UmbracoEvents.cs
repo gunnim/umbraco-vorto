@@ -32,10 +32,10 @@ namespace Our.Umbraco.Vorto.App_Start
 
             if (languageRetrievers.Any())
             {
-                //if (Settings.DetailedLogging)
-                //{
-                //    Log.Info("Found language retriever[s].");
-                //}
+                if (Settings.DetailedLogging)
+                {
+                    Log.Info("Found language retriever[s].");
+                }
 
                 Type langRetriever;
 
@@ -52,10 +52,10 @@ namespace Our.Umbraco.Vorto.App_Start
 
                 Settings.customRetriever = Activator.CreateInstance(langRetriever) as ILanguageRetriever;
 
-                //if (Settings.DetailedLogging)
-                //{
-                //    Log.Info("Settings.customRetriever == " + Settings.customRetriever);
-                //}
+                if (Settings.DetailedLogging)
+                {
+                    Log.Info("Settings.customRetriever == " + Settings.customRetriever);
+                }
             }
         }
     }

@@ -7,8 +7,8 @@
     <ProjectGuid>{B26558EC-3502-4879-A2CB-1E668CB43D09}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Our.Umbraco.Vorto</RootNamespace>
-    <AssemblyName>Our.Umbraco.Vorto</AssemblyName>
+    <RootNamespace>GMO.Vorto</RootNamespace>
+    <AssemblyName>GMO.Vorto</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -22,7 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Our.Umbraco.Vorto.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\GMO.Vorto.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -130,6 +130,7 @@
       <HintPath>..\packages\UmbracoCms.Core.7.1.4\lib\SQLCE4Umbraco.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -226,12 +227,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\UmbracoEvents.cs" />
+    <Compile Include="Configuration.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="Exceptions\VortoException.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\VortoValueExtensions.cs" />
+    <Compile Include="Helpers\TypeLoaderExtensions.cs" />
     <Compile Include="Helpers\VortoHelper.cs" />
     <Compile Include="Models\DataTypeInfo.cs" />
     <Compile Include="Converters\VortoValueConverter.cs" />
     <Compile Include="Extensions\IPublishedContentExtensions.cs" />
+    <Compile Include="Models\ILanguageRetriever.cs" />
     <Compile Include="Models\Language.cs" />
     <Compile Include="Models\VortoValue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -244,6 +251,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="GMO.Vorto.nuspec" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
