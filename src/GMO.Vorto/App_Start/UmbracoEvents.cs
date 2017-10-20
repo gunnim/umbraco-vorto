@@ -28,7 +28,8 @@ namespace Our.Umbraco.Vorto.App_Start
         {
             var ppType = typeof(ILanguageRetriever);
             var languageRetrievers = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(x => TypeHelper.GetTypesWithInterface(x, ppType));
+                .SelectMany(x => TypeHelper.GetTypesWithInterface(x, ppType))
+                .Where(t => !t.IsInterface);
 
             if (languageRetrievers.Any())
             {

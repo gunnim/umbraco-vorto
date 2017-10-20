@@ -1,4 +1,5 @@
 ﻿using log4net;
+using Our.Umbraco.Vorto.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -147,14 +148,21 @@ namespace Our.Umbraco.Vorto.Web.Controllers
                             }));
                 }
             }
-            else if (languageSource == "custom" && Settings.customRetriever != null)
+            else if (languageSource == "custom")
             {
-                if (Settings.DetailedLogging)
+                if (Settings.customRetriever != null)
                 {
-                    Log.Info("About to use custom retriever");
-                }
+                    if (Settings.DetailedLogging)
+                    {
+                        Log.Info("About to use custom retriever");
+                    }
 
-                languages = Settings.customRetriever.GetLanguages().ToList();
+                    languages.AddRange(Settings.customRetriever.GetLanguages());
+                }
+                else
+                {
+                    throw new VortoException("No ILanguageRetriever found for use with PropertyEditor with custom language source.");
+                }
             }
             else
             {
