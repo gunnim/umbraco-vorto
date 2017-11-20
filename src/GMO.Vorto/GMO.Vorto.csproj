@@ -231,6 +231,7 @@
     <Compile Include="Configuration.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Exceptions\VortoException.cs" />
+    <Compile Include="Extensions\IContentExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\VortoValueExtensions.cs" />
     <Compile Include="Helpers\TypeLoaderExtensions.cs" />
