@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0"?>
 <package >
     <metadata>
-        <id>GMO.Vorto</id>
+        <id>GMO.Vorto.Web</id>
         <version>0.0.3</version>
         <title>GMO Vorto fork</title>
         <authors>Gunnar Már Óttarsson</authors>
@@ -11,8 +11,8 @@
         <iconUrl>https://a-v2.sndcdn.com/assets/images/sc-icons/favicon-2cadd14b.ico</iconUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>Fork of Our.Umbraco.Vorto</description>
-      <releaseNotes>Initial project split</releaseNotes>
-      <copyright>Copyright 2017</copyright>
+        <releaseNotes>Initial project split</releaseNotes>
+        <copyright>Copyright 2017</copyright>
         <tags></tags>
     </metadata>
 </package>
