@@ -1,5 +1,4 @@
-﻿using log4net;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Exceptions;
 using Our.Umbraco.Vorto.Models;
 using System;
@@ -15,11 +14,6 @@ namespace GMO.Vorto.Extensions
     /// </summary>
     public static class IContentExtensions
     {
-        private static readonly ILog Log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType
-            );
-
         /// <summary>
         /// Sets vorto values for all languages in provided dictionary object
         /// </summary>

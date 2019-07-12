@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using ClientDependency.Core;
+using GMO.Vorto.PropertyEditor;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
+using Umbraco.Core.Composing;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.Editors;
@@ -19,80 +21,33 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
     [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/jquery.hoverIntent.minified.js", Priority = 1)]
     [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/vorto.js", Priority = 2)]
     [PropertyEditorAsset(ClientDependencyType.Css, "~/App_Plugins/Vorto/css/vorto.css", Priority = 2)]
-    [PropertyEditor("Our.Umbraco.Vorto", "Vorto", "~/App_Plugins/Vorto/Views/vorto.html",
-		ValueType = "JSON")]
-	public class VortoPropertyEditor : PropertyEditor
-	{
-		private IDictionary<string, object> _defaultPreValues;
-		public override IDictionary<string, object> DefaultPreValues
+    [DataEditor("Our.Umbraco.Vorto", "Vorto", "~/App_Plugins/Vorto/Views/vorto.html",
+		ValueType = ValueTypes.Json)]
+	public class VortoPropertyEditor : DataEditor
+    {
+		public VortoPropertyEditor(ILogger logger)
+            : base(logger)
 		{
-			get { return _defaultPreValues; }
-			set { _defaultPreValues = value; }
 		}
 
-		public VortoPropertyEditor()
+        /// <inheritdoc />
+        protected override IConfigurationEditor CreateConfigurationEditor() => new VortoConfigurationEditor();
+
+        #region Value Editor
+
+        protected override IDataValueEditor CreateValueEditor()
 		{
-			// Setup default values
-			_defaultPreValues = new Dictionary<string, object>
+			return new VortoPropertyValueEditor();
+		}
+
+		internal class VortoPropertyValueEditor : DataValueEditor
+        {
+			public override string ConvertDbToString(
+                PropertyType propertyType, 
+                object value, 
+                IDataTypeService dataTypeService)
 			{
-				{"languageSource", "installed"},
-				{"mandatoryBehaviour", "ignore"},
-				{"rtlBehaviour", "ignore"},
-			};
-		}
-
-		#region Pre Value Editor
-
-		protected override PreValueEditor CreatePreValueEditor()
-		{
-			return new VortoPreValueEditor();
-		}
-
-		internal class VortoPreValueEditor : PreValueEditor
-		{
-            [PreValueField("dataType", "Data Type", "~/App_Plugins/Vorto/views/vorto.propertyEditorPicker.html", Description = "Select the data type to wrap.")]
-			public string DataType { get; set; }
-
-            [PreValueField("languageSource", "Language Source", "~/App_Plugins/Vorto/views/vorto.languageSourceRadioList.html", Description = "Select where Vorto should lookup the languages from.")]
-			public string LanguageSource { get; set; }
-
-			[PreValueField("xpath", "Language Nodes XPath", "textstring", Description = "If using in-use language source, enter an XPath statement to locate nodes containing language settings.")]
-			public string XPath { get; set; }
-
-			[PreValueField("displayNativeNames", "Display Native Language Names", "boolean", Description = "Set whether to display language names in their native form.")]
-			public string DisplayNativeNames { get; set; }
-
-            [PreValueField("primaryLanguage", "Primary Language", "~/App_Plugins/Vorto/views/vorto.languagePicker.html", Description = "Select the primary language for this field.")]
-			public string PrimaryLanguage { get; set; }
-
-            [PreValueField("mandatoryBehaviour", "Mandatory Field Behaviour", "~/App_Plugins/Vorto/views/vorto.mandatoryBehaviourPicker.html", Description = "Select how Vorto should handle mandatory fields.")]
-			public string MandatoryBehaviour { get; set; }
-
-            [PreValueField("rtlBehaviour", "RTL Behaviour", "~/App_Plugins/Vorto/views/vorto.rtlBehaviourPicker.html", Description = "[EXPERIMENTAL] Select how Vorto should handle Right-to-left languages. This feature is experimental so depending on the property being wrapped, results may vary.")]
-            public string RtlBehaviour { get; set; }
-
-            [PreValueField("hideLabel", "Hide Label", "boolean", Description = "Hide the Umbraco property title and description, making the Vorto span the entire page width")]
-            public bool HideLabel { get; set; }
-		}
-
-		#endregion
-
-		#region Value Editor
-
-		protected override PropertyValueEditor CreateValueEditor()
-		{
-			return new VortoPropertyValueEditor(base.CreateValueEditor());
-		}
-
-		internal class VortoPropertyValueEditor : PropertyValueEditorWrapper
-		{
-			public VortoPropertyValueEditor(PropertyValueEditor wrapped) 
-				: base(wrapped)
-			{ }
-
-			public override string ConvertDbToString(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
-			{
-				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
+				if (value == null || value.ToString().IsNullOrWhiteSpace())
                     return string.Empty;
 
                 // Something weird is happening in core whereby ConvertDbToString is getting
@@ -100,39 +55,46 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
                 // again, which in tern screws up the values. To get round it, we create a 
                 // dummy property copying the original properties value, this way not overwriting
                 // the original property value allowing it to be re-converted again later
-                var prop2 = new Property(propertyType, property.Value);
+
+                // changed to temp var
+                var res = value;
 
 				try
 				{
-					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
-				    if (value.Values != null)
+					var deserializedValue = JsonConvert.DeserializeObject<VortoValue>(value.ToString());
+				    if (deserializedValue.Values != null)
 				    {
-				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+				        var dtd = VortoHelper.GetTargetDataTypeDefinition(deserializedValue.DtdGuid);
+				        var propEditor = dtd.Editor;
 				        var propType = new PropertyType(dtd);
 
-				        var keys = value.Values.Keys.ToArray();
+				        var keys = deserializedValue.Values.Keys.ToArray();
 				        foreach (var key in keys)
 				        {
-				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-				            var newValue = propEditor.ValueEditor.ConvertDbToString(prop, propType, dataTypeService);
-				            value.Values[key] = newValue;
+				            var newValue = propEditor.GetValueEditor().ConvertDbToString(
+                                propType,
+                                deserializedValue.Values[key] == null 
+                                    ? null 
+                                    : deserializedValue.Values[key].ToString(),
+                                dataTypeService);
+
+				            deserializedValue.Values[key] = newValue;
 				        }
 
-                        prop2.Value = JsonConvert.SerializeObject(value);
+                        res = JsonConvert.SerializeObject(deserializedValue);
 				    }
 				}
 				catch (Exception ex)
 				{
-					LogHelper.Error<VortoPropertyValueEditor>("Error converting DB value to String", ex);
+					Current.Logger.Error<VortoPropertyValueEditor>("Error converting DB value to String", ex);
 				}
 
-                return base.ConvertDbToString(prop2, propertyType, dataTypeService);
+                return base.ConvertDbToString(propertyType, res, dataTypeService);
 			}
 
-			public override object ConvertDbToEditor(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
+			public override object ToEditor(Property property, IDataTypeService dataTypeService, string culture = null, string segment = null)
 			{
-				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
+				if (property.GetValue() == null || property.GetValue().ToString().IsNullOrWhiteSpace())
                     return string.Empty;
 
                 // Something weird is happening in core whereby ConvertDbToString is getting
@@ -140,37 +102,41 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
                 // again, which in tern screws up the values. To get round it, we create a 
                 // dummy property copying the original properties value, this way not overwriting
                 // the original property value allowing it to be re-converted again later
-                var prop2 = new Property(propertyType, property.Value);
+                var prop2 = new Property(property.PropertyType);
+                prop2.SetValue(property.GetValue());
 
-				try
-				{
-					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
+                try
+                {
+					var value = JsonConvert.DeserializeObject<VortoValue>(property.GetValue().ToString());
 				    if (value.Values != null)
 				    {
-				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-				        var propType = new PropertyType(dtd);
+                        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
+                        var propEditor = dtd.Editor;
+                        var propType = new PropertyType(dtd);
 
-				        var keys = value.Values.Keys.ToArray();
-				        foreach (var key in keys)
-				        {
-				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-				            var newValue = propEditor.ValueEditor.ConvertDbToEditor(prop, propType, dataTypeService);
-				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
-				        }
+                        var keys = value.Values.Keys.ToArray();
+                        foreach (var key in keys)
+                        {
+                            var prop = new Property(propType);
+                            prop.SetValue(value?.Values[key]?.ToString());
+                            var newValue = propEditor.GetValueEditor().ToEditor(
+                                prop,
+                                dataTypeService);
+                            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
+                        }
 
-                        prop2.Value = JsonConvert.SerializeObject(value);
+                        prop2.SetValue(JsonConvert.SerializeObject(value));
 				    }
 				}
 				catch (Exception ex)
 				{
-					LogHelper.Error<VortoPropertyValueEditor>("Error converting DB value to Editor", ex);
+					Current.Logger.Error<VortoPropertyValueEditor>("Error converting DB value to Editor", ex);
 				}
 
-                return base.ConvertDbToEditor(prop2, propertyType, dataTypeService);
+                return base.ToEditor(prop2, dataTypeService, culture, segment);
 			}
 
-			public override object ConvertEditorToDb(ContentPropertyData editorValue, object currentValue)
+			public override object FromEditor(ContentPropertyData editorValue, object currentValue)
 			{
 				if (editorValue.Value == null || editorValue.Value.ToString().IsNullOrWhiteSpace())
 					return string.Empty;
@@ -181,15 +147,14 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				    if (value.Values != null)
 				    {
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var preValues =
-				            ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
-				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+
+                        var propEditor = dtd.Editor;
 
 				        var keys = value.Values.Keys.ToArray();
 				        foreach (var key in keys)
 				        {
-				            var propData = new ContentPropertyData(value.Values[key], preValues, new Dictionary<string, object>());
-				            var newValue = propEditor.ValueEditor.ConvertEditorToDb(propData, value.Values[key]);
+				            var propData = new ContentPropertyData(value.Values[key], dtd.Configuration);
+				            var newValue = propEditor.GetValueEditor().FromEditor(propData, value.Values[key]);
 				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
 				        }
 				    }
@@ -197,10 +162,10 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				}
 				catch (Exception ex)
 				{
-					LogHelper.Error<VortoPropertyValueEditor>("Error converting DB value to Editor", ex);
+                    Current.Logger.Error<VortoPropertyValueEditor>("Error converting DB value to Editor", ex);
 				}
 
-				return base.ConvertEditorToDb(editorValue, currentValue);
+				return base.FromEditor(editorValue, currentValue);
 			}
 		}
 

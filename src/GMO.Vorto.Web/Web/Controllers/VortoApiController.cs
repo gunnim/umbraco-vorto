@@ -1,4 +1,4 @@
-﻿using log4net;
+﻿using GMO.Vorto.PropertyEditor;
 using Our.Umbraco.Vorto.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -8,8 +8,8 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Web.Http;
-using umbraco;
 using Umbraco.Core;
+using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Web.Editors;
@@ -23,20 +23,20 @@ namespace Our.Umbraco.Vorto.Web.Controllers
     {
         public IEnumerable<object> GetNonVortoDataTypes()
         {
-            return Services.DataTypeService.GetAllDataTypeDefinitions()
-                .Where(x => x.PropertyEditorAlias != "Our.Umbraco.Vorto")
+            return Services.DataTypeService.GetAll()
+                .Where(x => x.EditorAlias != "Our.Umbraco.Vorto")
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new
                 {
                     guid = x.Key,
                     name = x.Name,
-                    propertyEditorAlias = x.PropertyEditorAlias
+                    propertyEditorAlias = x.EditorAlias
                 });
         }
 
         public object GetDataTypeById(Guid id)
         {
-            var dtd = Services.DataTypeService.GetDataTypeDefinitionById(id);
+            var dtd = Services.DataTypeService.GetDataType(id);
             return FormatDataType(dtd);
         }
 
@@ -50,10 +50,10 @@ namespace Our.Umbraco.Vorto.Web.Controllers
                     ct = Services.MemberTypeService.Get(contentTypeAlias);
                     break;
                 case "content":
-                    ct = Services.ContentTypeService.GetContentType(contentTypeAlias);
+                    ct = Services.ContentTypeService.Get(contentTypeAlias);
                     break;
                 case "media":
-                    ct = Services.ContentTypeService.GetMediaType(contentTypeAlias);
+                    ct = Services.MediaTypeService.Get(contentTypeAlias);
                     break;
             }
 
@@ -64,98 +64,97 @@ namespace Our.Umbraco.Vorto.Web.Controllers
             if (prop == null)
                 return null;
 
-            var dtd = Services.DataTypeService.GetDataTypeDefinitionById(prop.DataTypeDefinitionId);
+            var dtd = Services.DataTypeService.GetDataType(prop.DataTypeKey);
             return FormatDataType(dtd);
         }
 
-        protected object FormatDataType(IDataTypeDefinition dtd)
+        protected object FormatDataType(IDataType dtd)
         {
             if (dtd == null)
                 throw new HttpResponseException(HttpStatusCode.NotFound);
 
-            var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+            var propEditor = dtd.Editor;
 
-            // Force converter before passing prevalues to view
-            var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
-            var convertedPreValues = propEditor.PreValueEditor.ConvertDbToEditor(propEditor.DefaultPreValues,
-                preValues);
+            var preValues = dtd.Configuration;
+
+            var convertedPreValues = propEditor.GetConfigurationEditor()
+                .ToConfigurationEditor(preValues);
 
             return new
             {
                 guid = dtd.Key,
-                propertyEditorAlias = dtd.PropertyEditorAlias,
+                propertyEditorAlias = dtd.EditorAlias,
                 preValues = convertedPreValues,
-                view = propEditor.ValueEditor.View
+                view = propEditor.GetValueEditor().View,
             };
         }
 
         public IEnumerable<Language> GetLanguages(string section, int id, int parentId, Guid dtdGuid)
         {
-            var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdGuid);
+            var dtd = Services.DataTypeService.GetDataType(dtdGuid);
             if (dtd == null) return Enumerable.Empty<Language>();
 
-            var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
-            var languageSource = preValues.ContainsKey("languageSource") ? preValues["languageSource"].Value : "";
-            var primaryLanguage = preValues.ContainsKey("primaryLanguage") ? preValues["primaryLanguage"].Value : "";
+            var preValues = (VortoConfiguration) dtd.Configuration;
+            var languageSource = preValues?.LanguageSource ?? "";
+            var primaryLanguage = preValues?.PrimaryLanguage ?? "";
 
             var languages = new List<Language>();
 
             if (languageSource == "inuse")
             {
-                var xpath = preValues.ContainsKey("xpath") ? preValues["xpath"].Value : "";
+                var xpath = preValues?.XPath ?? "";
 
-                // Grab languages by xpath (only if in content section)
-                if (!string.IsNullOrWhiteSpace(xpath) && section == "content")
-                {
-                    xpath = xpath.Replace("$currentPage",
-                        string.Format("//*[@id={0} and @isDoc]", id)).Replace("$parentPage",
-                            string.Format("//*[@id={0} and @isDoc]", parentId)).Replace("$ancestorOrSelf",
-                                string.Format("//*[@id={0} and @isDoc]", id != 0 ? id : parentId));
+                throw new NotImplementedException();
 
-                    // Lookup language nodes
-                    var nodeIds = uQuery.GetNodesByXPath(xpath).Select(x => x.Id).ToArray();
-                    if (nodeIds.Any())
-                    {
-                        var db = ApplicationContext.Current.DatabaseContext.Database;
-                        languages.AddRange(db.Query<string>(
-                            string.Format(
-                                "SELECT DISTINCT [languageISOCode] FROM [umbracoLanguage] JOIN [umbracoDomains] ON [umbracoDomains].[domainDefaultLanguage] = [umbracoLanguage].[id] WHERE [umbracoDomains].[domainRootStructureID] in ({0})",
-                                string.Join(",", nodeIds)))
-                            .Select(CultureInfo.GetCultureInfo)
-                            .Select(x => new Language
-                            {
-                                IsoCode = x.Name,
-                                Name = x.DisplayName,
-                                NativeName = x.NativeName,
-                                IsRightToLeft = x.TextInfo.IsRightToLeft
-                            }));
-                    }
-                }
-                else
-                {
-                    // No language node xpath so just return a list of all languages in use
-                    var db = ApplicationContext.Current.DatabaseContext.Database;
-                    languages.AddRange(
-                        db.Query<string>(
-                            "SELECT [languageISOCode] FROM [umbracoLanguage] WHERE EXISTS(SELECT 1 FROM [umbracoDomains] WHERE [umbracoDomains].[domainDefaultLanguage] = [umbracoLanguage].[id])")
-                            .Select(CultureInfo.GetCultureInfo)
-                            .Select(x => new Language
-                            {
-                                IsoCode = x.Name,
-                                Name = x.DisplayName,
-                                NativeName = x.NativeName,
-                                IsRightToLeft = x.TextInfo.IsRightToLeft
-                            }));
-                }
+                //// Grab languages by xpath (only if in content section)
+                //if (!string.IsNullOrWhiteSpace(xpath) && section == "content")
+                //{
+                //    xpath = xpath.Replace("$currentPage",
+                //        string.Format("//*[@id={0} and @isDoc]", id)).Replace("$parentPage",
+                //            string.Format("//*[@id={0} and @isDoc]", parentId)).Replace("$ancestorOrSelf",
+                //                string.Format("//*[@id={0} and @isDoc]", id != 0 ? id : parentId));
+
+                //    // Lookup language nodes
+                //    var nodeIds = uQuery.GetNodesByXPath(xpath).Select(x => x.Id).ToArray();
+                //    if (nodeIds.Any())
+                //    {
+                //        var db = ApplicationContext.Current.DatabaseContext.Database;
+                //        languages.AddRange(db.Query<string>(
+                //            string.Format(
+                //                "SELECT DISTINCT [languageISOCode] FROM [umbracoLanguage] JOIN [umbracoDomains] ON [umbracoDomains].[domainDefaultLanguage] = [umbracoLanguage].[id] WHERE [umbracoDomains].[domainRootStructureID] in ({0})",
+                //                string.Join(",", nodeIds)))
+                //            .Select(CultureInfo.GetCultureInfo)
+                //            .Select(x => new Language
+                //            {
+                //                IsoCode = x.Name,
+                //                Name = x.DisplayName,
+                //                NativeName = x.NativeName,
+                //                IsRightToLeft = x.TextInfo.IsRightToLeft
+                //            }));
+                //    }
+                //}
+                //else
+                //{
+                //    // No language node xpath so just return a list of all languages in use
+                //    var db = ApplicationContext.Current.DatabaseContext.Database;
+                //    languages.AddRange(
+                //        db.Query<string>(
+                //            "SELECT [languageISOCode] FROM [umbracoLanguage] WHERE EXISTS(SELECT 1 FROM [umbracoDomains] WHERE [umbracoDomains].[domainDefaultLanguage] = [umbracoLanguage].[id])")
+                //            .Select(CultureInfo.GetCultureInfo)
+                //            .Select(x => new Language
+                //            {
+                //                IsoCode = x.Name,
+                //                Name = x.DisplayName,
+                //                NativeName = x.NativeName,
+                //                IsRightToLeft = x.TextInfo.IsRightToLeft
+                //            }));
+                //}
             }
             else if (languageSource == "custom")
             {
                 if (Settings.customRetriever != null)
                 {
-                    if (Settings.DetailedLogging)
-                    {
-                        Log.Info("About to use custom retriever");
-                    }
+                    Logger.Debug<VortoApiController>("About to use custom retriever");
 
                     languages.AddRange(Settings.customRetriever.GetLanguages());
                 }
@@ -214,17 +213,15 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 
         public IEnumerable<Language> GetInstalledLanguages()
         {
-            var languages = new List<Language>();
-
-            languages.AddRange(umbraco.cms.businesslogic.language.Language.GetAllAsList()
-                .Select(x => CultureInfo.GetCultureInfo(x.CultureAlias))
+            return Services.LocalizationService.GetAllLanguages()
+                .Select(x => CultureInfo.GetCultureInfo(x.IsoCode))
                 .Select(x => new Language
                 {
                     IsoCode = x.Name,
                     Name = x.DisplayName,
                     NativeName = x.NativeName,
                     IsRightToLeft = x.TextInfo.IsRightToLeft
-                }));
+                });
 
             //return new List<Language>
             //{
@@ -242,13 +239,6 @@ namespace Our.Umbraco.Vorto.Web.Controllers
             //        NativeName = "Ísland"
             //    }
             //};
-
-            return languages;
         }
-
-        private static readonly ILog Log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType
-            );
     }
 }

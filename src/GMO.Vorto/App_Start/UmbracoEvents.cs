@@ -1,30 +1,23 @@
-﻿using log4net;
-using Our.Umbraco.Vorto.Exceptions;
+﻿using Our.Umbraco.Vorto.Exceptions;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using System;
 using System.Linq;
 using System.Reflection;
-using Umbraco.Core;
+using Umbraco.Core.Logging;
+using Umbraco.Core.Composing;
 
 namespace Our.Umbraco.Vorto.App_Start
 {
     /// <summary>
     /// Hooks into the umbraco application startup lifecycle 
     /// </summary>
-    class UmbracoEvents : ApplicationEventHandler
+    class Startup : IUserComposer
     {
-        private static readonly ILog Log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType
-            );
-
         /// <summary>
         /// Umbraco lifecycle method
         /// </summary>
-        /// <param name="umbracoApplication"></param>
-        /// <param name="applicationContext"></param>
-        protected override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        public void Compose(Composition composition)
         {
             var ppType = typeof(ILanguageRetriever);
             var languageRetrievers = AppDomain.CurrentDomain.GetAssemblies()
@@ -33,10 +26,7 @@ namespace Our.Umbraco.Vorto.App_Start
 
             if (languageRetrievers.Any())
             {
-                if (Settings.DetailedLogging)
-                {
-                    Log.Info("Found language retriever[s].");
-                }
+                composition.Logger.Debug<Startup>("Found language retriever[s].");
 
                 Type langRetriever;
 
@@ -53,10 +43,7 @@ namespace Our.Umbraco.Vorto.App_Start
 
                 Settings.customRetriever = Activator.CreateInstance(langRetriever) as ILanguageRetriever;
 
-                if (Settings.DetailedLogging)
-                {
-                    Log.Info("Settings.customRetriever == " + Settings.customRetriever);
-                }
+                composition.Logger.Debug<Startup>("Settings.customRetriever == " + Settings.customRetriever);
             }
         }
     }

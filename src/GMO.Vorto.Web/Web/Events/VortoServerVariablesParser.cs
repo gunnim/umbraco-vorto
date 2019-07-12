@@ -5,20 +5,23 @@ using System.Reflection;
 using System.Web;
 using Umbraco.Core;
 using Umbraco.Core.Persistence;
-using Umbraco.Web.UI.JavaScript;
 using System.Web.Routing;
 using System.Web.Mvc;
 using Our.Umbraco.Vorto.Web.Controllers;
 using Umbraco.Web;
-
+using Umbraco.Web.JavaScript;
+using Umbraco.Core.Composing;
 
 namespace Our.Umbraco.Vorto.Web.Events
 {
-    public class VortoServerVariablesParser : ApplicationEventHandler
+    public class VortoServerVariablesParser : IComponent
     {
-        protected override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        public void Initialize()
         {
             ServerVariablesParser.Parsing += ServerVariablesParser_Parsing;
+        }
+        public void Terminate()
+        {
         }
 
         void ServerVariablesParser_Parsing(object sender, Dictionary<string, object> e)
@@ -34,8 +37,6 @@ namespace Our.Umbraco.Vorto.Web.Events
                         controller => controller.GetInstalledLanguages())
                 }
             };
-
-
 
             if (!e.Keys.Contains("vorto"))
             {

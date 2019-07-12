@@ -1,32 +1,32 @@
 ﻿using Umbraco.Core;
+using Umbraco.Core.Composing;
+using Umbraco.Core.Events;
+using Umbraco.Core.Models;
 using Umbraco.Core.Services;
+using Umbraco.Core.Services.Implement;
 
 namespace Our.Umbraco.Vorto.Web.Events
 {
-	public class VortoCacheExpire : IApplicationEventHandler
-	{
-		#region Unused
+    public class SubscribeToDataTypeServiceSavingComponent : IComponent
+    {
+        // initialize: runs once when Umbraco starts
+        public void Initialize()
+        {
+            DataTypeService.Saved += ExpireVortoCache;
+        }
 
-		public void OnApplicationInitialized(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
-		{ }
+        // terminate: runs once when Umbraco stops
+        public void Terminate()
+        {
+        }
 
-		public void OnApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
-		{ }
-
-		#endregion
-
-		public void OnApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
-		{
-			DataTypeService.Saved += ExpireVortoCache;
-		}
-
-		private void ExpireVortoCache(IDataTypeService sender, global::Umbraco.Core.Events.SaveEventArgs<global::Umbraco.Core.Models.IDataTypeDefinition> e)
-		{
-			foreach (var dataType in e.SavedEntities)
-			{
-				ApplicationContext.Current.ApplicationCache.RuntimeCache.ClearCacheItem(
-					Constants.CacheKey_GetTargetDataTypeDefinition + dataType.Id);
-			}
-		}
-	}
+        private void ExpireVortoCache(IDataTypeService sender, SaveEventArgs<IDataType> e)
+        {
+            foreach (var dataType in e.SavedEntities)
+            {
+                Current.AppCaches.RuntimeCache.Clear(
+                    Constants.CacheKey_GetTargetDataTypeDefinition + dataType.Id);
+            }
+        }
+    }
 }

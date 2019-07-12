@@ -1,4 +1,5 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using Umbraco.Core.Models;
 
 namespace Our.Umbraco.Vorto.Models
 {

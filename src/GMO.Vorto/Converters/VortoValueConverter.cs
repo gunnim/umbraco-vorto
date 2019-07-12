@@ -2,24 +2,34 @@
 using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
+using Umbraco.Core.Composing;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Core.PropertyEditors;
 
 namespace Our.Umbraco.Vorto.Converters
 {
-	[PropertyValueType(typeof(VortoValue))]
-	[PropertyValueCache(PropertyCacheValue.All, PropertyCacheLevel.Content)]
 	public class VortoValueConverter : PropertyValueConverterBase
 	{
-		public override bool IsConverter(PublishedPropertyType propertyType)
+        public override Type GetPropertyValueType(IPublishedPropertyType propertyType)
+            => typeof(VortoValue);
+
+        public override PropertyCacheLevel GetPropertyCacheLevel(IPublishedPropertyType propertyType)
+            => PropertyCacheLevel.Element;
+
+        public override bool IsConverter(IPublishedPropertyType propertyType)
 		{
-			return propertyType.PropertyEditorAlias.Equals("Our.Umbraco.Vorto");
+			return propertyType.EditorAlias.Equals("Our.Umbraco.Vorto");
 		}
 
-		public override object ConvertDataToSource(PublishedPropertyType propertyType, object source, bool preview)
-		{
-			try
+        public override object ConvertIntermediateToObject(
+            IPublishedElement owner, 
+            IPublishedPropertyType propertyType, 
+            PropertyCacheLevel cacheLevel, 
+            object source, 
+            bool preview)
+        {
+            try
 			{
 				if (source != null && !source.ToString().IsNullOrWhiteSpace())
 				{
@@ -28,7 +38,7 @@ namespace Our.Umbraco.Vorto.Converters
 			}
 			catch (Exception e)
 			{
-				LogHelper.Error<VortoValueConverter>("Error converting Vorto value", e);
+				Current.Logger.Error<VortoValueConverter>(e, "Error converting Vorto value");
 			}
 
 			return null;

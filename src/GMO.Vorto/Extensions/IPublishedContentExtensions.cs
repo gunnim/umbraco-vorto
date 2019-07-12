@@ -4,7 +4,9 @@ using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
+using Umbraco.Core.PropertyEditors;
 using Umbraco.Web;
+using Umbraco.Web.Composing;
 
 namespace Our.Umbraco.Vorto.Extensions
 {
@@ -38,7 +40,7 @@ namespace Our.Umbraco.Vorto.Extensions
 			if (cultureName == null)
 				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
 
-			if (!content.HasValue(propertyAlias, recursive))
+			if (!content.HasValue(propertyAlias))
 				return false;
 
 		    return content.DoInnerHasVortoValue(propertyAlias, cultureName, recursive);
@@ -78,10 +80,10 @@ namespace Our.Umbraco.Vorto.Extensions
 
         private static VortoValue GetVortoModel(this IPublishedContent content, string propertyAlias)
         {
-            if (content.HasValue(propertyAlias))
+            if (content.HasProperty(propertyAlias))
             {
                 var prop = content.GetProperty(propertyAlias);
-                if (prop.Value is VortoValue) return prop.Value as VortoValue;
+                if (prop.GetValue() is VortoValue) return prop.GetValue() as VortoValue;
             }
 
             return null;
@@ -112,19 +114,23 @@ namespace Our.Umbraco.Vorto.Extensions
                     // just ignoring these when looking up converters.
                     // NB: IPropertyEditorValueConverter not to be confused with
                     // IPropertyValueConverter which are the ones most people are creating
-                    var properyType = CreateDummyPropertyType(
+                    var propertyType = CreateDummyPropertyType(
                         targetDataType.Id,
-                        targetDataType.PropertyEditorAlias,
+                        targetDataType.Editor,
                         content.ContentType);
 
-                    var inPreviewMode = UmbracoContext.Current.InPreviewMode;
+                    var inPreviewMode = Current.UmbracoContext.InPreviewMode;
 
                     // Try convert data to source
                     // We try this first as the value is stored as JSON not
                     // as XML as would occur in the XML cache as in the act
                     // of converting to XML this would ordinarily get called
                     // but with JSON it doesn't, so we try this first
-                    var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
+                    var converted1 = propertyType.ConvertInterToObject(
+                        content, 
+                        PropertyCacheLevel.Element, 
+                        value, 
+                        inPreviewMode);
                     if (converted1 is T) return (T)converted1;
 
                     var convertAttempt = converted1.TryConvertTo<T>();
@@ -132,7 +138,10 @@ namespace Our.Umbraco.Vorto.Extensions
 
                     // Try convert source to object
                     // If the source value isn't right, try converting to object
-                    var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
+                    var converted2 = propertyType.ConvertSourceToInter(
+                        content, 
+                        converted1, 
+                        inPreviewMode);
                     if (converted2 is T) return (T)converted2;
 
                     convertAttempt = converted2.TryConvertTo<T>();
@@ -180,13 +189,21 @@ namespace Our.Umbraco.Vorto.Extensions
 
 	    #endregion
 
-		private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
+		private static PublishedPropertyType CreateDummyPropertyType(
+            int dataTypeId, 
+            IDataEditor dataEditor, 
+            IPublishedContentType contentType)
 		{
-            return new PublishedPropertyType(contentType,
-				new PropertyType(new DataTypeDefinition(-1, propertyEditorAlias)
+            return new PublishedPropertyType(
+                contentType,
+				new PropertyType(new DataType(dataEditor)
 				{
 					Id = dataTypeId
-				}));
+				}),
+                Current.Factory.GetInstance<PropertyValueConverterCollection>(),
+                Current.Factory.GetInstance<IPublishedModelFactory>(),
+                Current.PublishedContentTypeFactory
+            );
 		}
 	}
 }
