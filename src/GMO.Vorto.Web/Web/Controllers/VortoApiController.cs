@@ -5,13 +5,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Threading;
 using System.Web.Http;
 using Umbraco.Core;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Core.PropertyEditors;
 using Umbraco.Web.Editors;
 using Umbraco.Web.Mvc;
 using Language = Our.Umbraco.Vorto.Models.Language;
@@ -94,7 +92,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
             var dtd = Services.DataTypeService.GetDataType(dtdGuid);
             if (dtd == null) return Enumerable.Empty<Language>();
 
-            var preValues = (VortoConfiguration) dtd.Configuration;
+            var preValues = (VortoConfiguration)dtd.Configuration;
             var languageSource = preValues?.LanguageSource ?? "";
             var primaryLanguage = preValues?.PrimaryLanguage ?? "";
 

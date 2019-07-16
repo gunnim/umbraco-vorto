@@ -1,16 +1,12 @@
-﻿using System;
+﻿using Our.Umbraco.Vorto.Web.Controllers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Web;
-using Umbraco.Core;
-using Umbraco.Core.Persistence;
-using System.Web.Routing;
 using System.Web.Mvc;
-using Our.Umbraco.Vorto.Web.Controllers;
+using System.Web.Routing;
+using Umbraco.Core.Composing;
 using Umbraco.Web;
 using Umbraco.Web.JavaScript;
-using Umbraco.Core.Composing;
 
 namespace Our.Umbraco.Vorto.Web.Events
 {

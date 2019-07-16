@@ -1,6 +1,6 @@
-﻿using System.Threading;
-using Our.Umbraco.Vorto.Helpers;
+﻿using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
+using System.Threading;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
@@ -10,13 +10,13 @@ using Umbraco.Web.Composing;
 
 namespace Our.Umbraco.Vorto.Extensions
 {
-	public static class IPublishedContentExtensions
-	{
+    public static class IPublishedContentExtensions
+    {
         #region HasValue
 
         private static bool DoInnerHasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false)
-	    {
+        {
             var vortoModel = content.GetVortoModel(propertyAlias);
 
             if (vortoModel != null && vortoModel.Values != null)
@@ -29,22 +29,22 @@ namespace Our.Umbraco.Vorto.Extensions
                     return true;
             }
 
-            return recursive && content.Parent != null 
+            return recursive && content.Parent != null
                 ? content.Parent.DoInnerHasVortoValue(propertyAlias, cultureName, recursive)
                 : false;
-	    }
+        }
 
-		private static bool DoHasVortoValue(this IPublishedContent content, string propertyAlias,
+        private static bool DoHasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false)
-		{
-			if (cultureName == null)
-				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
+        {
+            if (cultureName == null)
+                cultureName = Thread.CurrentThread.CurrentUICulture.Name;
 
-			if (!content.HasValue(propertyAlias))
-				return false;
+            if (!content.HasValue(propertyAlias))
+                return false;
 
-		    return content.DoInnerHasVortoValue(propertyAlias, cultureName, recursive);
-		}
+            return content.DoInnerHasVortoValue(propertyAlias, cultureName, recursive);
+        }
 
         /// <summary>
         /// Determines if the given property alias has a vorto value.
@@ -55,7 +55,7 @@ namespace Our.Umbraco.Vorto.Extensions
         /// <param name="recursive">A value indicating whether to navigate the tree upwards until a property with a value is found.</param>
         /// <param name="fallbackCultureName"></param>
         public static bool HasVortoValue(this IPublishedContent content, string propertyAlias,
-            string cultureName = null, bool recursive = false, 
+            string cultureName = null, bool recursive = false,
             string fallbackCultureName = null)
         {
             var hasValue = content.DoHasVortoValue(propertyAlias, cultureName, recursive);
@@ -127,9 +127,9 @@ namespace Our.Umbraco.Vorto.Extensions
                     // of converting to XML this would ordinarily get called
                     // but with JSON it doesn't, so we try this first
                     var converted1 = propertyType.ConvertInterToObject(
-                        content, 
-                        PropertyCacheLevel.Element, 
-                        value, 
+                        content,
+                        PropertyCacheLevel.Element,
+                        value,
                         inPreviewMode);
                     if (converted1 is T) return (T)converted1;
 
@@ -139,8 +139,8 @@ namespace Our.Umbraco.Vorto.Extensions
                     // Try convert source to object
                     // If the source value isn't right, try converting to object
                     var converted2 = propertyType.ConvertSourceToInter(
-                        content, 
-                        converted1, 
+                        content,
+                        converted1,
                         inPreviewMode);
                     if (converted2 is T) return (T)converted2;
 
@@ -161,14 +161,14 @@ namespace Our.Umbraco.Vorto.Extensions
                 : defaultValue;
         }
 
-		private static T DoGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
+        private static T DoGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T))
-		{
-			if (cultureName == null)
-				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
+        {
+            if (cultureName == null)
+                cultureName = Thread.CurrentThread.CurrentUICulture.Name;
 
-		    return content.DoInnerGetVortoValue(propertyAlias, cultureName, recursive, defaultValue);
-		}
+            return content.DoInnerGetVortoValue(propertyAlias, cultureName, recursive, defaultValue);
+        }
 
         public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
@@ -176,7 +176,7 @@ namespace Our.Umbraco.Vorto.Extensions
             var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive, default(T));
             if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
                 result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
-             
+
             return result;
         }
 
@@ -187,23 +187,23 @@ namespace Our.Umbraco.Vorto.Extensions
             return content.GetVortoValue<object>(propertyAlias, cultureName, recursive, defaultValue, fallbackCultureName);
         }
 
-	    #endregion
+        #endregion
 
-		private static PublishedPropertyType CreateDummyPropertyType(
-            int dataTypeId, 
-            IDataEditor dataEditor, 
+        private static PublishedPropertyType CreateDummyPropertyType(
+            int dataTypeId,
+            IDataEditor dataEditor,
             IPublishedContentType contentType)
-		{
+        {
             return new PublishedPropertyType(
                 contentType,
-				new PropertyType(new DataType(dataEditor)
-				{
-					Id = dataTypeId
-				}),
+                new PropertyType(new DataType(dataEditor)
+                {
+                    Id = dataTypeId
+                }),
                 Current.Factory.GetInstance<PropertyValueConverterCollection>(),
                 Current.Factory.GetInstance<IPublishedModelFactory>(),
                 Current.PublishedContentTypeFactory
             );
-		}
-	}
+        }
+    }
 }

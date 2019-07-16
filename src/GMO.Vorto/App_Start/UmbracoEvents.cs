@@ -3,9 +3,8 @@ using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using System;
 using System.Linq;
-using System.Reflection;
-using Umbraco.Core.Logging;
 using Umbraco.Core.Composing;
+using Umbraco.Core.Logging;
 
 namespace Our.Umbraco.Vorto.App_Start
 {

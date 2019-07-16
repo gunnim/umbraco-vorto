@@ -1,6 +1,4 @@
-﻿using Our.Umbraco.Vorto.Extensions;
-using Our.Umbraco.Vorto.Models;
-using System.Configuration;
+﻿using Our.Umbraco.Vorto.Models;
 
 namespace Our.Umbraco.Vorto
 {
