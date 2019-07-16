@@ -7,7 +7,7 @@ using Umbraco.Core.PropertyEditors;
 
 namespace GMO.Vorto.PropertyEditor
 {
-    public class VortoConfigurationEditor : ConfigurationEditor<VortoConfiguration>
+    class VortoConfigurationEditor : ConfigurationEditor<VortoConfiguration>
     {
         public override IDictionary<string, object> DefaultConfiguration => new Dictionary<string, object>
         {

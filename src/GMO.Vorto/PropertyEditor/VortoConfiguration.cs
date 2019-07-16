@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Our.Umbraco.Vorto.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,10 +8,10 @@ using Umbraco.Core.PropertyEditors;
 
 namespace GMO.Vorto.PropertyEditor
 {
-    public class VortoConfiguration
+    class VortoConfiguration
     {
         [ConfigurationField("dataType", "Data Type", "~/App_Plugins/Vorto/views/vorto.propertyEditorPicker.html", Description = "Select the data type to wrap.")]
-        public string DataType { get; set; }
+        public DataTypeInfo DataType { get; set; }
 
         [ConfigurationField("languageSource", "Language Source", "~/App_Plugins/Vorto/views/vorto.languageSourceRadioList.html", Description = "Select where Vorto should lookup the languages from.")]
         public string LanguageSource { get; set; }

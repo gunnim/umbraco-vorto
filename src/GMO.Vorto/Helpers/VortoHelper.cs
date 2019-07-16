@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GMO.Vorto.PropertyEditor;
@@ -28,11 +29,7 @@ namespace Our.Umbraco.Vorto.Helpers
                     {
                         VortoConfiguration valueList = (VortoConfiguration)dtd.Configuration;
 
-                        // FIX: Are these PreValues different from v8 ? 
-					    var dataType = JsonConvert.DeserializeObject<DataTypeInfo>(valueList.DataType);
-
-					    // Grab an instance of the target datatype
-					    return services.DataTypeService.GetDataType(dataType.Guid);
+					    return services.DataTypeService.GetDataType(valueList.DataType.Guid);
                     }
 
                     throw new VortoException($"Unable to get Vorto data type using id {myId} !");

@@ -37,11 +37,15 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
         protected override IDataValueEditor CreateValueEditor()
 		{
-			return new VortoPropertyValueEditor();
+			return new VortoPropertyValueEditor(Attribute);
 		}
 
 		internal class VortoPropertyValueEditor : DataValueEditor
         {
+            public VortoPropertyValueEditor(DataEditorAttribute attribute)
+                : base(attribute)
+            { }
+
 			public override string ConvertDbToString(
                 PropertyType propertyType, 
                 object value, 

@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Our.Umbraco.Vorto.Models
 {
-	internal class DataTypeInfo
+	class DataTypeInfo
 	{
 		[JsonProperty("guid")]
 		public Guid Guid { get; set; }

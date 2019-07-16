@@ -294,7 +294,7 @@
 
                 // TODO: Regex
             }
-        }
+        };
 
         // Load the datatype
         vortoResources.getDataTypeById($scope.model.config.dataType.guid).then(function (dataType) {

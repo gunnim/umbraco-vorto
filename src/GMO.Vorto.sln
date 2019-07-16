@@ -15,7 +15,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		..\.gitignore = ..\.gitignore
 		..\appveyor.yml = ..\appveyor.yml
-		GMO.Vorto\GMO.Vorto.nuspec = GMO.Vorto\GMO.Vorto.nuspec
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMO.Vorto", "GMO.Vorto\GMO.Vorto.csproj", "{B26558EC-3502-4879-A2CB-1E668CB43D09}"
