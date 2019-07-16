@@ -5,6 +5,7 @@ namespace Our.Umbraco.Vorto.Exceptions
     /// <summary>
     /// Exceptions caused by the Vorto library
     /// </summary>
+    [Serializable]
     public class VortoException : Exception
     {
         /// <summary>
