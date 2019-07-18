@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>GMO.Vorto.v8.Web</id>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <title>GMO Vorto fork</title>
     <authors>Gunnar Már Óttarsson</authors>
     <owners>Gunnar Már Óttarsson</owners>
@@ -11,7 +11,7 @@
     <iconUrl>https://a-v2.sndcdn.com/assets/images/sc-icons/favicon-2cadd14b.ico</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Fork of Our.Umbraco.Vorto</description>
-    <releaseNotes>Initial Umbraco v8 release</releaseNotes>
+    <releaseNotes>Fix hidden property editors</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags></tags>
   </metadata>
