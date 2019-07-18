@@ -6,7 +6,7 @@
     <title>GMO Vorto fork</title>
     <authors>Gunnar Már Óttarsson</authors>
     <owners>Gunnar Már Óttarsson</owners>
-    <licenseUrl>https://github.com/gunnim</licenseUrl>
+    <license type="expression">MIT</license>
     <projectUrl>https://github.com/gunnim/umbraco-vorto</projectUrl>
     <iconUrl>https://a-v2.sndcdn.com/assets/images/sc-icons/favicon-2cadd14b.ico</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
