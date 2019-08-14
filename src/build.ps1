@@ -1,3 +1,3 @@
-nuget restore
-nuget pack .\GMO.Vorto\ -build
-nuget pack .\GMO.Vorto.Web\ -build 
+﻿nuget restore
+nuget pack .\GMO.Vorto\ -build -IncludeReferencedProjects
+nuget pack .\GMO.Vorto.Web\ -build  -IncludeReferencedProjects
