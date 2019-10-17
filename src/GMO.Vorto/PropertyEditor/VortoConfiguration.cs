@@ -3,7 +3,7 @@ using Umbraco.Core.PropertyEditors;
 
 namespace GMO.Vorto.PropertyEditor
 {
-    class VortoConfiguration
+    public class VortoConfiguration
     {
         [ConfigurationField("dataType", "Data Type", "~/App_Plugins/Vorto/views/vorto.propertyEditorPicker.html", Description = "Select the data type to wrap.")]
         public DataTypeInfo DataType { get; set; }

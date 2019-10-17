@@ -3,7 +3,7 @@ using System;
 
 namespace Our.Umbraco.Vorto.Models
 {
-    class DataTypeInfo
+    public class DataTypeInfo
     {
         [JsonProperty("guid")]
         public Guid Guid { get; set; }
