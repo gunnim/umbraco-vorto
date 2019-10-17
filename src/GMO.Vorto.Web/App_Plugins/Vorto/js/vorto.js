@@ -194,17 +194,21 @@
         });
 
         var unsubscribe = $scope.$on("formSubmitting", function (ev, args) {
-            $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });
-            validateProperty();
-            if ($scope.vortoForm.$valid) {
-                // Strip out empty entries
-                var cleanValue = {};
-                _.each($scope.languages, function(language) {
-                    if ($scope.model.value.values[language.isoCode] && JSON.stringify($scope.model.value.values[language.isoCode]).length > 0) {
-                        cleanValue[language.isoCode] = $scope.model.value.values[language.isoCode];
-                    }
-                });
-                $scope.model.value.values = !_.isEmpty(cleanValue) ? cleanValue : undefined;
+            if ($scope.realActiveLanguage && $scope.vortoForm && $scope.model) {
+                $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });
+                validateProperty();
+                if ($scope.vortoForm.$valid) {
+                    // Strip out empty entries
+                    var cleanValue = {};
+                    _.each($scope.languages, function (language) {
+                        if ($scope.model.value.values[language.isoCode] && JSON.stringify($scope.model.value.values[language.isoCode]).length > 0) {
+                            cleanValue[language.isoCode] = $scope.model.value.values[language.isoCode];
+                        }
+                    });
+                    $scope.model.value.values = !_.isEmpty(cleanValue) ? cleanValue : undefined;
+                }
+            } else {
+                console.warn('Unable to perform vorto validation and cleanup on submit, this could mean vorto had not finished loading at submit time');
             }
         });
 
@@ -311,32 +315,37 @@
             // Get the current properties datatype
             vortoResources.getDataTypeByAlias(currentSection, nodeContext.contentTypeAlias, propAlias).then(function (dataType2) {
 
-                $scope.model.value.dtdGuid = dataType2.guid;
+                if (dataType2 && editorState.current && editorState.current.parentId) {
+                    $scope.model.value.dtdGuid = dataType2.guid;
 
-                // Load the languages (this will trigger everything else to bind)
-                vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType2.guid)
-                    .then(function (languages) {
+                    // Load the languages (this will trigger everything else to bind)
+                    vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType2.guid)
+                        .then(function (languages) {
 
-                        $scope.languages = languages;
+                            $scope.languages = languages;
 
-                        if (!$scope.model.value.values) {
-                            $scope.model.value.values = {};
-                        }
-
-                        _.each($scope.languages, function (language) {
-                            if (!$scope.model.value.values.hasOwnProperty(language.isoCode)) {
-                                $scope.model.value.values[language.isoCode] = $scope.model.value.values[language.isoCode];
+                            if (!$scope.model.value.values) {
+                                $scope.model.value.values = {};
                             }
+
+                            _.each($scope.languages, function (language) {
+                                if (!$scope.model.value.values.hasOwnProperty(language.isoCode)) {
+                                    $scope.model.value.values[language.isoCode] = $scope.model.value.values[language.isoCode];
+                                }
+                            });
+
+                            $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
+                                return itm.isDefault;
+                            });
+
+                            reSync();
+
+                            validateProperty();
                         });
 
-                        $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
-                            return itm.isDefault;
-                        });
-
-                        reSync();
-
-                        validateProperty();
-                    });
+                } else {
+                    console.warn('Unable to load vorto property with alias ' + propAlias);
+                }
             });
         });
 

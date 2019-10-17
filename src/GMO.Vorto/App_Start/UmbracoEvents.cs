@@ -18,9 +18,9 @@ namespace Our.Umbraco.Vorto.App_Start
         /// </summary>
         public void Compose(Composition composition)
         {
-            var ppType = typeof(ILanguageRetriever);
+            var type = typeof(ILanguageRetriever);
             var languageRetrievers = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(x => TypeHelper.GetTypesWithInterface(x, ppType))
+                .SelectMany(x => TypeHelper.GetTypesWithInterface(x, type))
                 .Where(t => !t.IsInterface);
 
             if (languageRetrievers.Any())
