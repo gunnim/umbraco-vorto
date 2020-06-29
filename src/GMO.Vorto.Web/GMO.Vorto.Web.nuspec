@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0"?>
 <package >
   <metadata>
-    <id>GMO.Vorto.v8.Web</id>
-    <version>0.1.3</version>
-    <title>GMO Vorto fork</title>
+    <id>GMO.Vorto.Web.v8</id>
+    <version>0.1.4</version>
+    <title>GMO.Vorto.Web.v8</title>
     <authors>Gunnar Már Óttarsson</authors>
     <owners>Gunnar Már Óttarsson</owners>
     <license type="expression">MIT</license>
