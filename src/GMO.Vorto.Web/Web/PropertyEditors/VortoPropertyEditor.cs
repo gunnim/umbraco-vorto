@@ -1,9 +1,9 @@
 ﻿using ClientDependency.Core;
-using GMO.Vorto.PropertyEditor;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
+using Our.Umbraco.Vorto.PropertyEditor;
 using System;
 using System.Linq;
 using Umbraco.Core;

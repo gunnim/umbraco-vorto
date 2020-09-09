@@ -1,7 +1,7 @@
 ﻿using Our.Umbraco.Vorto.Models;
 using Umbraco.Core.PropertyEditors;
 
-namespace GMO.Vorto.PropertyEditor
+namespace Our.Umbraco.Vorto.PropertyEditor
 {
     public class VortoConfiguration
     {

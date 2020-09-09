@@ -1,5 +1,5 @@
-﻿using GMO.Vorto.PropertyEditor;
-using Our.Umbraco.Vorto.Exceptions;
+﻿using Our.Umbraco.Vorto.Exceptions;
+using Our.Umbraco.Vorto.PropertyEditor;
 using System;
 using Umbraco.Core.Composing;
 using Umbraco.Core.Models;
