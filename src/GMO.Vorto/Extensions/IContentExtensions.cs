@@ -49,9 +49,11 @@ namespace Our.Umbraco.Vorto.Extensions
                     content.SetValue(alias, json);
                     return;
                 }
+
+                throw new InvalidOperationException("Unable to get data type for property.");
             }
 
-            throw new VortoException("Unable to find matching property on IContent.");
+            throw new InvalidOperationException("Unable to find matching property on IContent.");
         }
 
         public static void SetVortoValue(this IContent content, string alias, string storeAlias, object value)
@@ -83,7 +85,10 @@ namespace Our.Umbraco.Vorto.Extensions
                 }
 
                 SetVortoValue(content, alias, vortoItems);
+                return;
             }
+
+            throw new InvalidOperationException("Unable to find matching property on IContent.");
         }
 
         public static VortoValue GetVortoObject(this IContent content, string alias)
@@ -95,7 +100,12 @@ namespace Our.Umbraco.Vorto.Extensions
 
             var property = content.Properties.FirstOrDefault(x => x.Alias.ToUpperInvariant() == alias.ToUpperInvariant());
 
-            if (property?.GetValue() != null)
+            if (property == null)
+            {
+                throw new InvalidOperationException("Unable to find matching property on IContent.");
+            }
+
+            if (property.GetValue() != null)
             {
                 return JsonConvert.DeserializeObject<VortoValue>(property.GetValue().ToString());
             }
