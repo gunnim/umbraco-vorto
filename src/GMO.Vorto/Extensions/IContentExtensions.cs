@@ -47,6 +47,7 @@ namespace Our.Umbraco.Vorto.Extensions
                     var json = JsonConvert.SerializeObject(vortoValue);
 
                     content.SetValue(alias, json);
+                    return;
                 }
             }
 
