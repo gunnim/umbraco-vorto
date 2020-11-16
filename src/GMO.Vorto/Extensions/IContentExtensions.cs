@@ -4,6 +4,7 @@ using Our.Umbraco.Vorto.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core;
 using Umbraco.Core.Composing;
 using Umbraco.Core.Models;
 
@@ -91,6 +92,34 @@ namespace Our.Umbraco.Vorto.Extensions
             throw new InvalidOperationException("Unable to find matching property on IContent.");
         }
 
+        public static object GetVortoValue(this IContent content, string alias, string cultureName)
+        {
+            if (content == null)
+            {
+                throw new ArgumentNullException(nameof(content));
+            }
+            if (string.IsNullOrEmpty(cultureName))
+            {
+                throw new ArgumentNullException(nameof(cultureName));
+            }
+
+            var vortoModel = GetVortoObject(content, alias);
+
+            if (vortoModel?.Values != null)
+            {
+                var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
+                if (!bestMatchCultureName.IsNullOrWhiteSpace()
+                    && vortoModel.Values.ContainsKey(bestMatchCultureName)
+                    && vortoModel.Values[bestMatchCultureName] != null
+                    && vortoModel.Values[bestMatchCultureName]?.ToString().IsNullOrWhiteSpace() == false)
+                {
+                    return vortoModel.Values[bestMatchCultureName];
+                }
+            }
+             
+            return default;
+        }
+
         public static VortoValue GetVortoObject(this IContent content, string alias)
         {
             if (content == null)
@@ -105,9 +134,10 @@ namespace Our.Umbraco.Vorto.Extensions
                 throw new InvalidOperationException("Unable to find matching property on IContent.");
             }
 
-            if (property.GetValue() != null)
+            var val = property.GetValue();
+            if (val != null)
             {
-                return JsonConvert.DeserializeObject<VortoValue>(property.GetValue().ToString());
+                return JsonConvert.DeserializeObject<VortoValue>(val.ToString());
             }
 
             return null;
